@@ -17,3 +17,5 @@ Example:
 ```
 
 Supports user:pass or no-auth. Does not support TLS.
+
+NOTE: AeroReadUpdate added, works like AeroUpdateOnly, but does read before write (after the initial Insert that is).
