@@ -102,11 +102,11 @@ func (m *mainStruct) mainLoop() {
 		go func(pk int, goroutines chan int, first_run bool, success chan int) {
 
 			// lets handle panics
-			/*defer func() {
+			defer func() {
 				if r := recover(); r != nil {
 					logger.Critical("Recovered in f: %s", r)
 				}
-			}()*/
+			}()
 
 			// we want the routine to note it exited once it is done, so the main thread know - for throttling, you see
 			defer func(goroutines chan int) {
@@ -128,6 +128,8 @@ func (m *mainStruct) mainLoop() {
 				a := as.NewPolicy()
 				a.ReplicaPolicy = as.MASTER_PROLES
 				a.ConsistencyLevel = as.CONSISTENCY_ONE
+				a.Timeout = 50 * time.Millisecond
+				a.SocketTimeout = a.Timeout
 				rec, err := m.client.Get(a, key, m.binName)
 				if err != nil {
 					if m.errors == true {
@@ -135,7 +137,13 @@ func (m *mainStruct) mainLoop() {
 					}
 					return
 				}
-				key = rec.Key
+				if rec != nil {
+					key = rec.Key
+				} else {
+					if m.errors == true {
+						logger.Error("GET() returned NIL, record not found for PK %d",pk)
+					}
+				}
 			}
 
 			// lets set the policy
